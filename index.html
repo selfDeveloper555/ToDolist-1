@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="wrapper">
+    <div class="list">
+        <input class="input" type="text" placeholder="Введите задачу" id="inputText">
+        <button class="button" onclick="addTask()">+</button>
+        <ul ondragstart="" class="ul" id="todoTask">
+        </ul>
+    </div>
+    <div draggable="true" ondragover="handleDragOver" ondrop="handleDrop" class="list">
+        <ul></ul>
+    </div>
+</div>
+</body>
+<script src="javascript.js"></script>
+</html>
