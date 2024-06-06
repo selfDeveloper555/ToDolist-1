@@ -9,11 +9,10 @@
     <div class="list">
         <input class="input" type="text" placeholder="Введите задачу" id="inputText">
         <button class="button" onclick="addTask()">+</button>
-        <ul ondragstart="" class="ul" id="todoTask">
-        </ul>
+        <ul ondragstart="handleDragStart" class="ul" id="todoTask"></ul>
     </div>
     <div draggable="true" ondragover="handleDragOver" ondrop="handleDrop" class="list">
-        <ul></ul>
+        <ul ></ul>
     </div>
 </div>
 </body>
