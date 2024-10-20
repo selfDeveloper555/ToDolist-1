@@ -6,6 +6,12 @@ let taskArray = []; // массив для задач
 
 //  функция для добавления задачи в список
 function addTask() {
+  // Добавление кнопки закрепить 
+  let pinButton = document.createElement("button");
+  pinButton.classList.add('pin-button');
+  pinButton.textContent = "📌";
+  pinButton.addEventListener("click", togglePin);
+  // добавление контейнера задач
   let taskContainer = document.createElement("div");
   taskContainer.classList.add("task-container");
   // Добавление элемента задачи 
@@ -20,6 +26,7 @@ function addTask() {
   // Добавление элементов в DOM
   taskContainer.appendChild(taskContent);
   taskContainer.appendChild(deleteButton);
+  taskContainer.appendChild(pinButton);
   // Добавление атрибута draggable
   taskContainer.setAttribute("draggable", "true");
   taskContainer.classList.add("task");
@@ -35,35 +42,33 @@ function addTask() {
     container: 0, 
     order: taskArray.length, // порядеовый номер задчи
   });
-  
-  saveTasks();  
-  updateLocalStorage(); 
+  saveTasks();  // сохранение задачи в lockalStorage
+  updateLocalStorage(); // обновление lockalStorage
+}
+
+// функция для закрепления задачи
+function togglePin(e) {
+  const taskContainer = e.target.parentElement;
+  taskContainer.classList.toggle('pinned'); // Переключение класса pinned
+  // переключение возможности перетаскивания закрепленной задачи 
+  if (taskContainer.classList.contains('pinned')) {
+    taskContainer.setAttribute('draggable', "false");
+  } else {
+    taskContainer.setAttribute('draggable', 'true');
+  }
+  updateLocalStorage(); // Обновление localStorage
 }
 // Функция для удаления задачи
 function deleteTask(e) {
-  let taskContainer = e.target.closest(".task-container");  //
+  let taskContainer = e.target.closest(".task-container");
+
+  if (taskContainer.classList.contains('pinned')) {
+    return;
+  }
   taskContainer.remove(); // Удаление задачи 
   updateLocalStorage();   // Обновление в локалном хранилище
 }; 
 
-// function addTask() {
-//   let li = document.createElement("li");
-//   li.textContent = enterInput.value;
-//   li.setAttribute("draggable", "true");
-//   li.classList.add("task"); // Добавляем класс task
-//   li.addEventListener("dragstart", handleDragStart);
-//   li.id = "task-" + taskIdCounter++;
-//   enterInput.value = "";
-//   document.querySelector(".ul").appendChild(li);
-//   taskArray.push({
-//     id: li.id,
-//     textContent: li.textContent,
-//     container: 0,
-//     order: taskArray.length,
-//   }); // Добавляем задачу в массив
-//   saveTasks();
-//   updateLocalStorage();
-// }
 // функция определения начала перетаскивания
 function handleDragStart(e) {
   e.dataTransfer.setData("text/plain", e.target.id);
@@ -80,11 +85,11 @@ function handleDragOver(e) {
 }
 //  функция для выполнения события Drop
 function handleDrop(e) {
+  console.log('drop event:', e);
   e.preventDefault();
   const data = e.dataTransfer.getData("text/plain");
   const draggableElement = document.getElementById(data);
   if (draggableElement) {
-    // Проверяем что t.target является допустимым контейнером
     let dropTarget = e.target;
     while (dropTarget && !dropTarget.classList.contains("list")) {
       dropTarget = dropTarget.parentNode;
@@ -103,7 +108,6 @@ function handleDrop(e) {
 //  Функция для выполнения события DragLeave
 function handleDragLeave(e) {}
 // Сохранение данных массива в localStorage
-// Сохранение данных массива в localStorage
 function saveTasks() {
   const tasksData = taskArray.map((task) => ({
     id: task.id, 
@@ -113,6 +117,7 @@ function saveTasks() {
   }));
   localStorage.setItem("taskArray", JSON.stringify(tasksData));
 }
+
 // Функция для обновления данных в lockalStorage
 function updateLocalStorage() {
   const lists = document.querySelectorAll(".list");
@@ -126,14 +131,13 @@ function updateLocalStorage() {
         textContent: task.querySelector('.task-content').textContent, //Сохраняем только текст задачи
         container: index, // Индекс контейнера, куда была перенесена задача
         order: order, // Порядок задачи в контейнере
+        pinned: task.classList.contains("pinned"), // Сохранение состояния закрепления 
       });
     });
   });
 
   localStorage.setItem("taskArray", JSON.stringify(tasksData));
 }
-
-// Получение данных из localStorage и преобразовав массив
 
 // Получение данных из localStorage и преобразование массива
 function getTasks() {
@@ -154,32 +158,48 @@ function getTasks() {
         if (list) {
           let taskContainer = document.createElement("div");
           taskContainer.classList.add("task-container");
+          if (taskData.pinned) {
+            taskContainer.classList.add('pinned');
+            taskContainer.setAttribute('draggable', 'false'); // Отключение перетаскивания для закреплённой задачи
+          } else {
+            taskContainer.setAttribute('draggable', 'true'); // Включение перетаскивания для незакреплённой задачи
+          }
+          // создание элемента задачи 
           let taskContent = document.createElement("div");
           taskContent.classList.add("task-content");
-          taskContent.textContent = taskData.textContent; // Восстановление только текста задачи
+          taskContent.textContent = taskData.textContent;
+          // создание кнопки удаления
           let deleteButton = document.createElement("button");
           deleteButton.classList.add("delete-button");
           deleteButton.textContent = "X";
-          deleteButton.addEventListener("click", deleteTask);
+          deleteButton.addEventListener("click", deleteTask); 
+          // создание кнопки закрепить 
+          let pinButton = document.createElement('button');
+          pinButton.classList.add('pin-button');
+          pinButton.textContent = "📌";
+          pinButton.addEventListener("click", togglePin);
+          // добавление элементов в DOM
           taskContainer.appendChild(taskContent);
           taskContainer.appendChild(deleteButton);
-          taskContainer.setAttribute("draggable", "true");
+          taskContainer.appendChild(pinButton);
           taskContainer.classList.add("task");
           taskContainer.id = taskData.id;
           taskContainer.addEventListener("dragstart", handleDragStart);
           list.appendChild(taskContainer);
-          taskArray.push(taskContainer);
+          // добавление задачи в массив
+          taskArray.push({
+            id: taskData.id,
+            textContent: taskData.textContent,
+            container: taskData.container,
+            order: taskData.order,
+            pinned: taskData.pinned
+          });
         }
       });
   }
 }
 
-
-//
-
-
-// document.addEventListener("DOMContentLoaded", getTasks);
-
+// запуск при загрузке страницы 
 document.addEventListener("DOMContentLoaded", () => {
   getTasks(); // Восстановление задач
   // Назначение событий drag-and-drop для контейнеров
