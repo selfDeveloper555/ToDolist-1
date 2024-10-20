@@ -6,23 +6,64 @@ let taskArray = []; // массив для задач
 
 //  функция для добавления задачи в список
 function addTask() {
-  let li = document.createElement("li");
-  li.textContent = enterInput.value;
-  li.setAttribute("draggable", "true");
-  li.classList.add("task"); // Добавляем класс task
-  li.addEventListener("dragstart", handleDragStart);
-  li.id = "task-" + taskIdCounter++;
+  let taskContainer = document.createElement("div");
+  taskContainer.classList.add("task-container");
+  // Добавление элемента задачи 
+  let taskContent = document.createElement("div");
+  taskContent.classList.add("task-content");
+  taskContent.textContent = enterInput.value;
+  // Добавление кнопки удаления 
+  let deleteButton = document.createElement("button");
+  deleteButton.classList.add("delete-button");
+  deleteButton.textContent = "X";
+  deleteButton.addEventListener("click", deleteTask);
+  // Добавление элементов в DOM
+  taskContainer.appendChild(taskContent);
+  taskContainer.appendChild(deleteButton);
+  // Добавление атрибута draggable
+  taskContainer.setAttribute("draggable", "true");
+  taskContainer.classList.add("task");
+  taskContainer.addEventListener("dragstart", handleDragStart);
+  taskContainer.id = "task-" + taskIdCounter++;
+  // Очистка поля ввода 
   enterInput.value = "";
-  document.querySelector(".ul").appendChild(li);
+  document.querySelector(".ul").appendChild(taskContainer);
+  // Добавление задачи в массив
   taskArray.push({
-    id: li.id,
-    textContent: li.textContent,
-    container: 0,
-    order: taskArray.length,
-  }); // Добавляем задачу в массив
-  saveTasks();
-  updateLocalStorage();
+    id: taskContainer.id, 
+    textContent: taskContent.textContent, 
+    container: 0, 
+    order: taskArray.length, // порядеовый номер задчи
+  });
+  
+  saveTasks();  
+  updateLocalStorage(); 
 }
+// Функция для удаления задачи
+function deleteTask(e) {
+  let taskContainer = e.target.closest(".task-container");  //
+  taskContainer.remove(); // Удаление задачи 
+  updateLocalStorage();   // Обновление в локалном хранилище
+}; 
+
+// function addTask() {
+//   let li = document.createElement("li");
+//   li.textContent = enterInput.value;
+//   li.setAttribute("draggable", "true");
+//   li.classList.add("task"); // Добавляем класс task
+//   li.addEventListener("dragstart", handleDragStart);
+//   li.id = "task-" + taskIdCounter++;
+//   enterInput.value = "";
+//   document.querySelector(".ul").appendChild(li);
+//   taskArray.push({
+//     id: li.id,
+//     textContent: li.textContent,
+//     container: 0,
+//     order: taskArray.length,
+//   }); // Добавляем задачу в массив
+//   saveTasks();
+//   updateLocalStorage();
+// }
 // функция определения начала перетаскивания
 function handleDragStart(e) {
   e.dataTransfer.setData("text/plain", e.target.id);
@@ -62,60 +103,27 @@ function handleDrop(e) {
 //  Функция для выполнения события DragLeave
 function handleDragLeave(e) {}
 // Сохранение данных массива в localStorage
+// Сохранение данных массива в localStorage
 function saveTasks() {
-  // Сохраняем только данные о задачах, а не DOM-элементы
   const tasksData = taskArray.map((task) => ({
-    id: task.id,
-    textContent: task.textContent,
+    id: task.id, 
+    textContent: task.textContent, // Убедитесь, что сохраняется только текст задачи
+    container: task.container,
+    order: task.order,
   }));
   localStorage.setItem("taskArray", JSON.stringify(tasksData));
 }
-// Получение данных из localStorage и преобразовав массив
-function getTasks() {
-  document.querySelector(".ul").innerHTML = ""; // Очистка списка
-  let dataLocalStorage = JSON.parse(localStorage.getItem("taskArray"));
-  if (dataLocalStorage) {
-    //Очистка массива и элементов задач
-    taskArray = [];
-    document.querySelectorAll(".task").forEach((task) => task.remove());
-    // Находим максимальный id среди сохранённых задач
-    const maxId = dataLocalStorage.reduce((max, taskData) => {
-      const currentId = parseInt(taskData.id.replace("task-", ""), 10);
-      return currentId > max ? currentId : max;
-    }, 0);
-    // Устанавливаем taskIdCounter на значение, следующее за максимальным id
-    taskIdCounter = maxId + 1;
-    // Восстанавливаем состояние каждой задачи
-    dataLocalStorage
-      .sort((a, b) => a.order - b.order) // Сортируем задачи по их порядку
-      .forEach((taskData) => {
-        const list = document.querySelectorAll(".list")[taskData.container]; // Получаем контейнер по сохраненному индексу
-        if (list) {
-          let li = document.createElement("li");
-          li.textContent = taskData.textContent;
-          li.setAttribute("draggable", "true");
-          // li.setAttribute("class", "list");
-          li.classList.add("task"); //Добавляем класс task
-          li.id = taskData.id;
-          li.addEventListener("dragstart", handleDragStart);
-          // document.querySelector(".ul").appendChild(li);
-          list.appendChild(li); // Добавляем элемент в его последний контейнер
-          taskArray.push(li); //запушили задачу в массив
-        }
-      });
-  }
-}
-
+// Функция для обновления данных в lockalStorage
 function updateLocalStorage() {
   const lists = document.querySelectorAll(".list");
   const tasksData = [];
-
+// Перебираем все списки и задачи в них 
   lists.forEach((list, index) => {
-    const tasks = list.querySelectorAll("li.task");
+    const tasks = list.querySelectorAll(".task-container");
     tasks.forEach((task, order) => {
       tasksData.push({
         id: task.id,
-        textContent: task.textContent,
+        textContent: task.querySelector('.task-content').textContent, //Сохраняем только текст задачи
         container: index, // Индекс контейнера, куда была перенесена задача
         order: order, // Порядок задачи в контейнере
       });
@@ -124,6 +132,51 @@ function updateLocalStorage() {
 
   localStorage.setItem("taskArray", JSON.stringify(tasksData));
 }
+
+// Получение данных из localStorage и преобразовав массив
+
+// Получение данных из localStorage и преобразование массива
+function getTasks() {
+  document.querySelector(".ul").innerHTML = "";
+  let dataLocalStorage = JSON.parse(localStorage.getItem("taskArray"));
+  if (dataLocalStorage) {
+    taskArray = [];
+    document.querySelectorAll(".task").forEach((task) => task.remove());
+    const maxId = dataLocalStorage.reduce((max, taskData) => {
+      const currentId = parseInt(taskData.id.replace("task-", ""), 10);
+      return currentId > max ? currentId : max;
+    }, 0);
+    taskIdCounter = maxId + 1;
+    dataLocalStorage
+      .sort((a, b) => a.order - b.order)
+      .forEach((taskData) => {
+        const list = document.querySelectorAll(".list")[taskData.container];
+        if (list) {
+          let taskContainer = document.createElement("div");
+          taskContainer.classList.add("task-container");
+          let taskContent = document.createElement("div");
+          taskContent.classList.add("task-content");
+          taskContent.textContent = taskData.textContent; // Восстановление только текста задачи
+          let deleteButton = document.createElement("button");
+          deleteButton.classList.add("delete-button");
+          deleteButton.textContent = "X";
+          deleteButton.addEventListener("click", deleteTask);
+          taskContainer.appendChild(taskContent);
+          taskContainer.appendChild(deleteButton);
+          taskContainer.setAttribute("draggable", "true");
+          taskContainer.classList.add("task");
+          taskContainer.id = taskData.id;
+          taskContainer.addEventListener("dragstart", handleDragStart);
+          list.appendChild(taskContainer);
+          taskArray.push(taskContainer);
+        }
+      });
+  }
+}
+
+
+//
+
 
 // document.addEventListener("DOMContentLoaded", getTasks);
 
