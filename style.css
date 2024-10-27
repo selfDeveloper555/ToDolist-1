@@ -1,0 +1,120 @@
+/* общие стили */
+.wrapper {
+  display: flex;
+  box-sizing: border-box;
+  margin: 0 auto;
+  width: 100%;
+  max-width: 1300px;
+  padding: 10px auto;
+  border: 2px solid black;
+  border-radius: 12px;
+}
+/* стили для списка задач */
+.list {
+  flex: 1;
+  /* border: 1px solid black; */
+  margin: 10px solid #1E5945;
+  padding: 5px;
+  background-color:  #1E5945;
+  border-radius: 10px;
+}
+/* стили для разделителя */
+.divider {
+  width: 1px;
+  height: auto;
+  background-color: black;
+
+}
+/* стили для ввода задачи */
+.input {
+  box-sizing: border-box;
+  width: 90%;
+  height: 30px;
+  border: 1px solid black;
+  border-radius: 10px;
+  background-color: #C7D0CC;
+  
+}
+/* стили для кнопки добавления задачи */
+.button {
+  box-sizing: border-box;
+  width: 9%;
+  height: 30px;
+  border-radius: 10px;
+  border: none;
+  background-color:   #414833;
+}
+.button:hover {
+  background-color: #44944A;
+}
+.button:active {
+  background-color: #7CFC00;
+}
+
+/* стили для списка задач */
+.ul {
+  list-style-type: none;
+  padding: 0;
+}
+/* стили для элемента списка задач */
+.li {
+  padding: 5px 0;
+}
+/* стили для контейнера задач */
+.task-container {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background-color: #C7D0CC;
+  border: 1px solid #ccc;
+  border-radius: 10px;
+  padding: 10px;
+  margin-bottom: 5px;
+}
+/* стили для контента задачи */
+.task-content {
+  flex-grow: 1;
+}
+/* стили для кнопки удаления */
+.delete-button {
+  background-color: #ff4d4d;
+  color: white;
+  border: none;
+  border-radius: 50%;
+  width: 20px;
+  height: 20px;
+  cursor: pointer;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+.delete-button:hover {
+  background-color: #FF2400;
+}
+.delete-button:active {
+  background-color: #ff4d4d;
+}
+/* стили для закрепленной задачи */
+.pinned {
+  opacity: 0.6;
+  cursor: not-allowed;
+  background-color: gray;
+  pointer-events: auto;
+}
+/* .pinned[draggable='true'] {
+  pointer-events: none;
+} */
+
+.pin-button {
+  background-color: #C7D0CC;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+}
+.pin-button:hover {
+  background-color: #44944A;
+}
+.pin-button:active {
+  background-color: #7CFC00;
+}
+
