@@ -35,3 +35,4 @@ function handleDrop(e) {
 }
 //  Функция для выполнения события DragLeave
 function handeDragLeave(e) {}
+// я вроде как подключил git на мак
