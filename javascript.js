@@ -4,6 +4,43 @@ let done = document.querySelectorAll(".list");
 let taskIdCounter = 0; // счетчик для id задач
 let taskArray = []; // массив для задач
 
+// Инициализация IndexedDB
+let db; // глобальная переменная для хранения соединения с базой данных
+const DB_NAME = 'TodoListDB'; // имя базы данных
+const STORE_NAME = 'tasks'; // имя хранилища объектов (таблицы)
+
+/**
+ * Инициализация базы данных IndexedDB
+ * @returns {Promise} Промис, который резолвится после успешного создания/открытия БД
+ */
+function initDB() {
+  return new Promise((resolve, reject) => {
+    // Открываем или создаем базу данных версии 1
+    const request = indexedDB.open(DB_NAME, 1);
+
+    // Обработчик ошибки при открытии БД
+    request.onerror = () => {
+      console.error('Ошибка открытия базы данных');
+      reject('Ошибка открытия базы данных');
+    };
+
+    // Обработчик успешного открытия БД
+    request.onsuccess = (event) => {
+      db = event.target.result;
+      resolve(db);
+    };
+
+    // Вызывается при создании новой БД или обновлении версии
+    request.onupgradeneeded = (event) => {
+      const db = event.target.result;
+      // Создаем хранилище объектов, если его еще нет
+      if (!db.objectStoreNames.contains(STORE_NAME)) {
+        db.createObjectStore(STORE_NAME, { keyPath: 'id' });
+      }
+    };
+  });
+}
+
 //  функция для добавления задачи в список
 function addTask() {
   // Добавление кнопки закрепить 
@@ -107,106 +144,168 @@ function handleDrop(e) {
 
 //  Функция для выполнения события DragLeave
 function handleDragLeave(e) {}
-// Сохранение данных массива в localStorage
+
+/**
+ * Сохранение задач в IndexedDB
+ * Заменяет предыдущую функцию работы с localStorage
+ */
 function saveTasks() {
+  // Подготавливаем данные для сохранения
   const tasksData = taskArray.map((task) => ({
-    id: task.id, 
-    textContent: task.textContent, // Убедитесь, что сохраняется только текст задачи
+    id: task.id,
+    textContent: task.textContent,
     container: task.container,
     order: task.order,
+    pinned: task.pinned
   }));
-  localStorage.setItem("taskArray", JSON.stringify(tasksData));
+
+  // Создаем транзакцию записи
+  const transaction = db.transaction([STORE_NAME], 'readwrite');
+  const store = transaction.objectStore(STORE_NAME);
+
+  // Очищаем старые данные
+  store.clear();
+  
+  // Сохраняем каждую задачу
+  tasksData.forEach(task => {
+    store.add(task);
+  });
 }
 
-// Функция для обновления данных в lockalStorage
+/**
+ * Обновление данных в IndexedDB
+ * Собирает актуальное состояние задач из DOM и сохраняет в БД
+ */
 function updateLocalStorage() {
   const lists = document.querySelectorAll(".list");
   const tasksData = [];
-// Перебираем все списки и задачи в них 
+
+  // Собираем данные из DOM
   lists.forEach((list, index) => {
     const tasks = list.querySelectorAll(".task-container");
     tasks.forEach((task, order) => {
       tasksData.push({
         id: task.id,
-        textContent: task.querySelector('.task-content').textContent, //Сохраняем только текст задачи
-        container: index, // Индекс контейнера, куда была перенесена задача
-        order: order, // Порядок задачи в контейнере
-        pinned: task.classList.contains("pinned"), // Сохранение состояния закрепления 
+        textContent: task.querySelector('.task-content').textContent,
+        container: index,
+        order: order,
+        pinned: task.classList.contains("pinned"),
       });
     });
   });
 
-  localStorage.setItem("taskArray", JSON.stringify(tasksData));
-}
-
-// Получение данных из localStorage и преобразование массива
-function getTasks() {
-  document.querySelector(".ul").innerHTML = "";
-  let dataLocalStorage = JSON.parse(localStorage.getItem("taskArray"));
-  if (dataLocalStorage) {
-    taskArray = [];
-    document.querySelectorAll(".task").forEach((task) => task.remove());
-    const maxId = dataLocalStorage.reduce((max, taskData) => {
-      const currentId = parseInt(taskData.id.replace("task-", ""), 10);
-      return currentId > max ? currentId : max;
-    }, 0);
-    taskIdCounter = maxId + 1;
-    dataLocalStorage
-      .sort((a, b) => a.order - b.order)
-      .forEach((taskData) => {
-        const list = document.querySelectorAll(".list")[taskData.container];
-        if (list) {
-          let taskContainer = document.createElement("div");
-          taskContainer.classList.add("task-container");
-          if (taskData.pinned) {
-            taskContainer.classList.add('pinned');
-            taskContainer.setAttribute('draggable', 'false'); // Отключение перетаскивания для закреплённой задачи
-          } else {
-            taskContainer.setAttribute('draggable', 'true'); // Включение перетаскивания для незакреплённой задачи
-          }
-          // создание элемента задачи 
-          let taskContent = document.createElement("div");
-          taskContent.classList.add("task-content");
-          taskContent.textContent = taskData.textContent;
-          // создание кнопки удаления
-          let deleteButton = document.createElement("button");
-          deleteButton.classList.add("delete-button");
-          deleteButton.textContent = "X";
-          deleteButton.addEventListener("click", deleteTask); 
-          // создание кнопки закрепить 
-          let pinButton = document.createElement('button');
-          pinButton.classList.add('pin-button');
-          pinButton.textContent = "📌";
-          pinButton.addEventListener("click", togglePin);
-          // добавление элементов в DOM
-          taskContainer.appendChild(taskContent);
-          taskContainer.appendChild(deleteButton);
-          taskContainer.appendChild(pinButton);
-          taskContainer.classList.add("task");
-          taskContainer.id = taskData.id;
-          taskContainer.addEventListener("dragstart", handleDragStart);
-          list.appendChild(taskContainer);
-          // добавление задачи в массив
-          taskArray.push({
-            id: taskData.id,
-            textContent: taskData.textContent,
-            container: taskData.container,
-            order: taskData.order,
-            pinned: taskData.pinned
-          });
-        }
-      });
-  }
-}
-
-// запуск при загрузке страницы 
-document.addEventListener("DOMContentLoaded", () => {
-  getTasks(); // Восстановление задач
-  // Назначение событий drag-and-drop для контейнеров
-  let containers = document.querySelectorAll(".list");
-  containers.forEach((container) => {
-    container.addEventListener("dragover", handleDragOver);
-    container.addEventListener("drop", handleDrop);
-    container.addEventListener("dragleave", handleDragLeave);
+  // Сохраняем в IndexedDB
+  const transaction = db.transaction([STORE_NAME], 'readwrite');
+  const store = transaction.objectStore(STORE_NAME);
+  
+  store.clear();
+  tasksData.forEach(task => {
+    store.add(task);
   });
+}
+
+/**
+ * Получение задач из IndexedDB и отображение их на странице
+ * @returns {Promise} Промис, который резолвится после загрузки всех задач
+ */
+function getTasks() {
+  return new Promise((resolve, reject) => {
+    // Создаем транзакцию для чтения
+    const transaction = db.transaction([STORE_NAME], 'readonly');
+    const store = transaction.objectStore(STORE_NAME);
+    const request = store.getAll();
+
+    request.onsuccess = () => {
+      const dataLocalStorage = request.result;
+      document.querySelector(".ul").innerHTML = "";
+      
+      if (dataLocalStorage && dataLocalStorage.length > 0) {
+        taskArray = [];
+        document.querySelectorAll(".task").forEach((task) => task.remove());
+        
+        // Находим максимальный ID для продолжения нумерации
+        const maxId = dataLocalStorage.reduce((max, taskData) => {
+          const currentId = parseInt(taskData.id.replace("task-", ""), 10);
+          return currentId > max ? currentId : max;
+        }, 0);
+        
+        taskIdCounter = maxId + 1;
+
+        // Сортируем задачи по порядку и восстанавливаем их на странице
+        dataLocalStorage
+          .sort((a, b) => a.order - b.order)
+          .forEach((taskData) => {
+            const list = document.querySelectorAll(".list")[taskData.container];
+            if (list) {
+              let taskContainer = document.createElement("div");
+              taskContainer.classList.add("task-container");
+              
+              if (taskData.pinned) {
+                taskContainer.classList.add('pinned');
+                taskContainer.setAttribute('draggable', 'false');
+              } else {
+                taskContainer.setAttribute('draggable', 'true');
+              }
+
+              let taskContent = document.createElement("div");
+              taskContent.classList.add("task-content");
+              taskContent.textContent = taskData.textContent;
+
+              let deleteButton = document.createElement("button");
+              deleteButton.classList.add("delete-button");
+              deleteButton.textContent = "X";
+              deleteButton.addEventListener("click", deleteTask);
+
+              let pinButton = document.createElement('button');
+              pinButton.classList.add('pin-button');
+              pinButton.textContent = "📌";
+              pinButton.addEventListener("click", togglePin);
+
+              taskContainer.appendChild(taskContent);
+              taskContainer.appendChild(deleteButton);
+              taskContainer.appendChild(pinButton);
+              taskContainer.classList.add("task");
+              taskContainer.id = taskData.id;
+              taskContainer.addEventListener("dragstart", handleDragStart);
+              list.appendChild(taskContainer);
+
+              taskArray.push({
+                id: taskData.id,
+                textContent: taskData.textContent,
+                container: taskData.container,
+                order: taskData.order,
+                pinned: taskData.pinned
+              });
+            }
+          });
+      }
+      resolve();
+    };
+
+    request.onerror = () => {
+      console.error('Ошибка получения задач');
+      reject('Ошибка получения задач');
+    };
+  });
+}
+
+/**
+ * Инициализация приложения при загрузке страницы
+ * Асинхронная функция для последовательной инициализации БД и загрузки задач
+ */
+document.addEventListener("DOMContentLoaded", async () => {
+  try {
+    await initDB(); // Сначала инициализируем базу данных
+    await getTasks(); // Затем загружаем сохраненные задачи
+    
+    // Инициализируем обработчики drag-and-drop
+    let containers = document.querySelectorAll(".list");
+    containers.forEach((container) => {
+      container.addEventListener("dragover", handleDragOver);
+      container.addEventListener("drop", handleDrop);
+      container.addEventListener("dragleave", handleDragLeave);
+    });
+  } catch (error) {
+    console.error('Ошибка инициализации:', error);
+  }
 }); 
