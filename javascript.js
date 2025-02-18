@@ -308,4 +308,23 @@ document.addEventListener("DOMContentLoaded", async () => {
   } catch (error) {
     console.error('Ошибка инициализации:', error);
   }
+});
+
+// Функция для установки фокуса на поле ввода
+function focusInput() {
+    enterInput.focus();
+}
+
+// Обработчик события нажатия клавиш
+document.addEventListener("keydown", (event) => {
+    if (event.key === "Enter") {
+        if (enterInput.value.trim() !== "") {
+            addTask(); // Добавление задачи
+        }
+    }
+});
+
+// Установка фокуса на поле ввода при загрузке страницы
+document.addEventListener("DOMContentLoaded", () => {
+    focusInput(); // Устанавливаем фокус на поле ввода
 }); 
