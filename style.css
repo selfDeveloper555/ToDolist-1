@@ -271,3 +271,66 @@ body {
   background-color: #7CFC00;
 }
 
+/* Стили для мобильных устройств (ширина до 600px) */
+@media (max-width: 600px) {
+    .wrapper {
+        padding: 15px; /* Уменьшаем отступы */
+        flex-direction: column; /* Изменяем направление на колонку */
+    }
+
+    .input-wrapper {
+        flex-direction: column; /* Поле ввода и кнопка в колонку */
+        margin-bottom: 20px; /* Увеличиваем отступ снизу */
+    }
+
+    .input {
+        width: 100%; /* Поле ввода занимает всю ширину */
+        margin-bottom: 10px; /* Отступ между полем ввода и кнопкой */
+    }
+
+    .button {
+        width: 100%; /* Кнопка занимает всю ширину */
+    }
+
+    .task-item {
+        font-size: 14px; /* Уменьшаем размер шрифта для задач */
+        padding: 10px; /* Уменьшаем отступы */
+    }
+}
+
+/* Стили для планшетов (ширина от 601px до 1024px) */
+@media (min-width: 601px) and (max-width: 1024px) {
+    .wrapper {
+        padding: 20px; /* Уменьшаем отступы */
+        flex-direction: column; /* Изменяем направление на колонку */
+    }
+
+    .input-wrapper {
+        flex-direction: row; /* Поле ввода и кнопка в строку */
+        margin-bottom: 15px; /* Увеличиваем отступ снизу */
+    }
+
+    .input {
+        width: 70%; /* Поле ввода занимает 70% ширины */
+        margin-right: 10px; /* Отступ между полем ввода и кнопкой */
+    }
+
+    .button {
+        width: 25%; /* Кнопка занимает 25% ширины */
+    }
+
+    .task-item {
+        font-size: 16px; /* Увеличиваем размер шрифта для задач */
+        padding: 12px; /* Увеличиваем отступы */
+    }
+}
+
+.column-title {
+    font-size: 18px; /* Размер шрифта для заголовков */
+    color: #ffffff; /* Цвет текста заголовков */
+    margin-bottom: 10px; /* Отступ снизу */
+    text-align: center; /* Выравнивание по центру */
+    font-weight: 600; /* Полужирный шрифт */
+    opacity: 0.8; /* Ненавязчивый цвет */
+}
+
